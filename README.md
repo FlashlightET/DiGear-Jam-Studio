@@ -73,4 +73,5 @@ Every song folder **must** contain a `meta.json` file with the song's original d
 
 ### here lmao
 
+https://github.com/user-attachments/assets/8180722c-60c3-44be-a130-c8213c66f7d9
 
