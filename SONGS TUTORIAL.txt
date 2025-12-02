@@ -1,0 +1,5 @@
+- Make a folder called "Songs"
+- Subfolders for each song "Song1", "Song2", etc
+- Each song needs a major and minor versions of all stems except for drums, in the ".ogg" format. (vocals_major.ogg, vocals_minor.ogg, bass_major.ogg, bass_minor.ogg, drums.ogg, etc)
+- Follow the meta.json example template and put that in the folder as well.
+- You should have 8 file in total.
