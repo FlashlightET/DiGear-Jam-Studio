@@ -65,6 +65,8 @@ class Slot:
         self.scale = None
         self.bpm = None
         self.volume = 1.0
+        self.offset = 0
+        self.half = 0
 
 # init slots
 slots = [Slot() for _ in range(8)]
@@ -109,6 +111,10 @@ class AudioEngine:
         pos = self.position
 
         for slot in self.slots:
+        
+            # Make an offset position for the current stem
+            offset_pos=(pos+slot.offset) % self.max_length 
+            
             if slot.empty or slot.stem is None:
                 continue
 
@@ -117,14 +123,14 @@ class AudioEngine:
             if length == 0:
                 continue
 
-            end = pos + frames
+            end = offset_pos + frames
             
             # handle wrap around
             if end <= length:
-                chunk = audio[pos:end]
+                chunk = audio[offset_pos:end]
             else:
                 wrap = end - length
-                part1 = audio[pos:length]
+                part1 = audio[offset_pos:length]
                 part2 = audio[0:wrap]
                 chunk = np.vstack((part1, part2))
 
@@ -173,7 +179,18 @@ def clear_slot(i):
     slot.song_name = None
     slot.type = None
     slot.volume = 1.0
+    slot.offset = 0
+    slot.half = 0
     print(f"slot {i} cleared")
+    
+def shift_slot(i):
+    slot = slots[i]
+    if slot.half == 0:
+        slot.half = 1
+        slot.offset = audio_engine.max_length // 2
+    else:
+        slot.half = 0
+        slot.offset = 0
 
 def add_stem_to_slot(slot_id, song_folder, stem_type):
     global master_bpm, master_key, master_scale
@@ -274,6 +291,8 @@ def add_stem_to_slot(slot_id, song_folder, stem_type):
     slot.key = song_key
     slot.scale = loaded_scale
     slot.bpm = song_bpm
+    slot.offset = 0
+    slot.half = 0
 
     print("stem loaded")
     audio_engine.update_max_length()
@@ -291,6 +310,12 @@ favicon = pygame.image.load("favicon.png")
 pygame.display.set_icon(favicon)
 FONT = pygame.font.SysFont("Arial", 22)
 BIGFONT = pygame.font.SysFont("Arial", 28)
+
+#images
+btn_offset_off=pygame.image.load('gui/btn_offset_off.png').convert_alpha()
+btn_offset_on=pygame.image.load('gui/btn_offset_on.png').convert_alpha()
+btn_offset_hover=pygame.image.load('gui/btn_offset_hover.png').convert_alpha()
+
 
 # colors
 CIRCLE_RADIUS = 60
@@ -557,6 +582,18 @@ def draw_slider(x, y, w, h, value):
     knob_radius = h // 2 + 2
     pygame.draw.circle(screen, SLIDER_TIP, (knob_x, knob_y), knob_radius)
     pygame.draw.circle(screen, knob_outline_col, (knob_x, knob_y), knob_radius, 2)
+    
+def draw_offset_button(x, y, state):
+    mx, my = pygame.mouse.get_pos()
+
+    if state == False:
+        screen.blit(btn_offset_off, (x,y))
+    else:
+        screen.blit(btn_offset_on, (x,y))
+        
+    #hover highlight
+    if x <= mx < x+32 and y <= my < y+32:
+        screen.blit(btn_offset_hover, (x,y))
 
 def draw_dynamic_text(surface, text, font, center_x, center_y, max_width, color):
     # draws text with outline and scales if too big
@@ -654,6 +691,8 @@ while running:
         draw_dynamic_text(screen, stype, FONT, cx, cy, max_text_width, (230, 230, 230))
         if mode_label:
             draw_dynamic_text(screen, mode_label, FONT, cx, cy + 22, max_text_width, mode_color)
+            
+        draw_offset_button(cx+30, cy+30, slot.half == 1)
 
         sx = cx - SLIDER_W // 2
         sy = cy + CIRCLE_RADIUS + 15
@@ -734,7 +773,7 @@ while running:
                 # hitboxes
                 btn_manual_confirm = pygame.Rect(230, 340, 180, 50)
                 btn_manual_cancel  = pygame.Rect(430, 340, 180, 50)
-
+                
                 # confirm click
                 if btn_manual_confirm.collidepoint(mx, my):
                     overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
@@ -877,29 +916,51 @@ while running:
                     if (mx - cx)**2 + (my - cy)**2 < CIRCLE_RADIUS**2:
                         clear_slot(i)
                         break
+                        
+                
+
+                
+                    
 
             # left click slider or open panel
             if event.button == 1:
-                for i in range(8):
-                    cx = 120 + (i % 4) * 200
-                    cy = 150 if i < 4 else 400
-                    sx = cx - SLIDER_W // 2
-                    sy = cy + CIRCLE_RADIUS + 15
+                for slot_index in range(8):
+                
+                    slot_button_clicked = False # used to defuse priority tantrums
                     
-                    # check slider
-                    if sx <= mx <= sx + SLIDER_W and sy <= my <= sy + SLIDER_H:
-                        dragging_slider = i
-                        rel = mx - sx
-                        slots[i].volume = max(0.0, min(1.0, rel / SLIDER_W))
-                        break
+                    btn_x=150 + (200 * (slot_index % 4))
+                    btn_y=180 + (250 * (slot_index // 4))
                     
-                    # check circle click
-                    if dragging_slider is None:
-                        if (mx - cx)**2 + (my - cy)**2 < CIRCLE_RADIUS**2:
-                            panel_open = True
-                            selected_slot = i
-                            dd_song.update_options(get_song_list()) 
+                    slot_btn=pygame.Rect(btn_x,btn_y,btn_x+32,btn_y+32)
+                    
+                    if slot_btn.collidepoint(mx,my):
+                    
+                        shift_slot(slot_index)
+                    
+                        slot_button_clicked=True
+                    
+                    if not slot_button_clicked:
+                        cx = 120 + (slot_index % 4) * 200
+                        cy = 150 if slot_index < 4 else 400
+                        sx = cx - SLIDER_W // 2
+                        sy = cy + CIRCLE_RADIUS + 15
+                        
+                        # check slider
+                        if sx <= mx <= sx + SLIDER_W and sy <= my <= sy + SLIDER_H:
+                            dragging_slider = slot_index
+                            rel = mx - sx
+                            slots[slot_index].volume = max(0.0, min(1.0, rel / SLIDER_W))
                             break
+                        
+                        # check circle click
+                        if dragging_slider is None:
+                            if (mx - cx)**2 + (my - cy)**2 < CIRCLE_RADIUS**2:
+                                panel_open = True
+                                selected_slot = slot_index
+                                dd_song.update_options(get_song_list()) 
+                                break
+                            
+            
 
         if event.type == pygame.MOUSEBUTTONUP:
             dragging_slider = None

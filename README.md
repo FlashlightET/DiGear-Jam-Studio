@@ -9,6 +9,7 @@ A real-time Python audio mixing application that automatically synchronizes pitc
 - **Stem Support:** Dedicated handling for Vocals, Bass, Drums, and Lead.
 - **Manual Override:** Manually force the Master Key, BPM, and Mode (Major/Minor)
 - **Volume Control:** Individual volume sliders for each slot.
+- **Bar Offset:** Stems can have their first half play in the second half of the loop, and vice versa.
 
 ## Prerequisites
 
@@ -23,7 +24,7 @@ pip install numpy soundfile sounddevice pygame pyrubberband
 The application expects a specific folder structure to load songs correctly. Create a folder named `Songs` in the same directory as the script.
 - NOTE: If you DO NOT have stems for both modes, the system falls back to using relative modes (adding or subtracting 3 semitones) so it should still mix fine.
 
-- PLEASE CHOP ALL STEMS TO YOUR PREFERRED 32 BARS OF THE SONG (or any multiple of 8 but ALL stems must be the same)
+- PLEASE CHOP ALL STEMS TO YOUR PREFERRED 32 BARS OF THE SONG (ALL stems must be the same)
 
 **Structure:**
 
@@ -63,6 +64,7 @@ Every song folder **must** contain a `meta.json` file with the song's original d
   - **Left Click (Slider):** Adjust volume for that slot.
   - **Right Click (Filled Circle):** Clear/Unload the slot.
   - **Top-Left Button:** Open Manual Tuning panel.
+  - **Left Click (Stem Shift Button)** Pressing the small shuffle icon in the corner of any slot shifts the bars by 16, effective swapping verses and chorus, etc.
 
 ### Interface
 
