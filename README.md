@@ -25,7 +25,7 @@ The application expects a specific folder structure to load songs correctly. Cre
 **Structure:**
 
 ```text
-DiGuser/
+ROOT/
 ├── main.py
 └── Songs/
     └── SongName/
