@@ -161,28 +161,6 @@ class AudioEngine:
             self.stream.close()
             print("audio engine stopped")
 
-def load_stem(song_folder, stem_type, scale, bpm):
-    if stem_type == "drums":
-        filename = "drums.ogg"
-    else:
-        filename = f"{stem_type}_{scale}.ogg"
-
-    path = os.path.join(song_folder, filename)
-    audio, sr = sf.read(path, dtype='float32')
-
-    if audio.ndim == 1:
-        audio = np.stack([audio, audio], axis=1)
-
-    if sr != sample_rate:
-        raise ValueError(f"samplerate mismatch in {path}")
-
-    # normalize
-    peak = np.max(np.abs(audio))
-    if peak > 0:
-        audio = audio / peak
-
-    return audio
-
 def clear_slot(i):
     slot = slots[i]
     slot.empty = True
@@ -200,7 +178,6 @@ def add_stem_to_slot(slot_id, song_folder, stem_type):
         meta = json.load(f)
 
     song_key = meta["key"]
-    song_scale = meta.get("scale", "major")
     song_bpm = meta["bpm"]
 
     print(f"\nloading stem '{stem_type}' from {song_folder}")
@@ -209,21 +186,59 @@ def add_stem_to_slot(slot_id, song_folder, stem_type):
     if master_bpm is None:
         master_bpm = song_bpm
         master_key = song_key
-        master_scale = song_scale
-        print("master tuning set from this stem")
+        master_scale = meta.get("scale", "major")
+        print(f"Master set to {master_key} {master_scale}")
+    
+    file_to_load = ""
+    loaded_scale = ""
+    
+    if stem_type == "drums":
+        file_to_load = "drums.ogg"
+        loaded_scale = "neutral"
+    else:
+        target_scale = master_scale
 
-    stem_audio = load_stem(song_folder, stem_type, master_scale, song_bpm)
+        target_path = os.path.join(song_folder, f"{stem_type}_{target_scale}.ogg")
+        
+        if os.path.exists(target_path):
+            file_to_load = f"{stem_type}_{target_scale}.ogg"
+            loaded_scale = target_scale
+        else:
+            fallback_scale = "minor" if target_scale == "major" else "major"
+            fallback_path = os.path.join(song_folder, f"{stem_type}_{fallback_scale}.ogg")
+            
+            if os.path.exists(fallback_path):
+                file_to_load = f"{stem_type}_{fallback_scale}.ogg"
+                loaded_scale = fallback_scale
+                print(f"no matching mode file found: falling back to the relative mode of {loaded_scale}")
+            else:
+                print(f"ERROR: No stem files found for {stem_type}")
+                return
 
-    # time stretch
+    # load Audio
+    full_path = os.path.join(song_folder, file_to_load)
+    stem_audio = load_stem_direct(full_path)
+
+    # time Stretch
     adjusted_bpm = bpm_with_multipliers(song_bpm, master_bpm)
     stretch_ratio = master_bpm / adjusted_bpm
     if stretch_ratio != 1.0:
         print(f"time stretch: {song_bpm} -> {adjusted_bpm} -> {master_bpm}")
         stem_audio = rb.time_stretch(stem_audio, sample_rate, stretch_ratio)
 
-    # pitch shift
+    # pitch shift (now with fallback shit)
     if stem_type != "drums":
         semis = key_shift_semitones(master_key, song_key)
+        if loaded_scale == master_scale:
+            pass
+            
+        elif loaded_scale != "neutral":
+            print("relative mode third offset haha funny")
+            if loaded_scale == "minor" and master_scale == "major":
+                semis -= 3
+            elif loaded_scale == "major" and master_scale == "minor":
+                semis += 3
+
         if semis != 0:
             print(f"pitch shift {semis:+d} semitones")
             stem_audio = rb.pitch_shift(stem_audio, sample_rate, semis)
@@ -231,19 +246,20 @@ def add_stem_to_slot(slot_id, song_folder, stem_type):
     # sync length
     if audio_engine.max_length == 0:
         audio_engine.max_length = len(stem_audio)
-
+    
     master_length = audio_engine.max_length
     cur_len = len(stem_audio)
     
     # micro stretch to align samples exactly
     if cur_len != master_length:
         ratio = master_length / cur_len
-        stem_audio = rb.time_stretch(stem_audio, sample_rate, 1 / ratio)
-        if len(stem_audio) > master_length:
-            stem_audio = stem_audio[:master_length]
-        elif len(stem_audio) < master_length:
-            pad = master_length - len(stem_audio)
-            stem_audio = np.vstack((stem_audio, np.zeros((pad, stem_audio.shape[1]), dtype=np.float32)))
+        if 0.5 < ratio < 2.0: 
+            stem_audio = rb.time_stretch(stem_audio, sample_rate, 1 / ratio)
+            if len(stem_audio) > master_length:
+                stem_audio = stem_audio[:master_length]
+            elif len(stem_audio) < master_length:
+                pad = master_length - len(stem_audio)
+                stem_audio = np.vstack((stem_audio, np.zeros((pad, stem_audio.shape[1]), dtype=np.float32)))
 
     slot = slots[slot_id]
     slot.empty = False
@@ -251,7 +267,7 @@ def add_stem_to_slot(slot_id, song_folder, stem_type):
     slot.song_name = os.path.basename(song_folder)
     slot.type = stem_type
     slot.key = song_key
-    slot.scale = song_scale
+    slot.scale = loaded_scale
     slot.bpm = song_bpm
 
     print("stem loaded")
@@ -445,6 +461,20 @@ dragging_slider = None
 panel_open = False
 selected_slot = None
 
+# relative/parallel mode shit
+use_relative_mode = False
+
+def load_stem_direct(path):
+    audio, sr = sf.read(path, dtype='float32')
+    if audio.ndim == 1:
+        audio = np.stack([audio, audio], axis=1)
+    if sr != sample_rate:
+        print(f"Warning: samplerate mismatch in {path}")
+    peak = np.max(np.abs(audio))
+    if peak > 0:
+        audio = audio / peak
+    return audio
+
 # stem select
 dd_song = Dropdown(240, 200, 360, 35, get_song_list(), max_display_items=7)
 dd_stem = Dropdown(240, 260, 360, 35, ["vocals", "bass", "lead", "drums"], max_display_items=4)
@@ -517,15 +547,25 @@ while running:
             
         pygame.draw.circle(screen, color, (cx, cy), CIRCLE_RADIUS)
         
-        max_text_width = (CIRCLE_RADIUS * 2) - 20
+        max_text_width = (CIRCLE_RADIUS * 2) - 10
         name = slot.song_name if slot.song_name else "Empty"
         stype = slot.type if slot.type else ""
-        
-        # dynamic text
-        draw_dynamic_text(screen, name, FONT, cx, cy - 12, max_text_width, TEXT_COLOR)
-        draw_dynamic_text(screen, stype, FONT, cx, cy + 12, max_text_width, (230, 230, 230))
 
-        # volume slider
+        mode_label = ""
+        mode_color = (200, 255, 200)
+
+        if not slot.empty and slot.type != "drums" and master_scale:
+            if slot.scale == master_scale:
+                 mode_label = f"{slot.scale.capitalize()} (Parallel)"
+            else:
+                 mode_label = f"{slot.scale.capitalize()} (Relative)"
+
+        # draw tuah
+        draw_dynamic_text(screen, name, FONT, cx, cy - 22, max_text_width, TEXT_COLOR)
+        draw_dynamic_text(screen, stype, FONT, cx, cy, max_text_width, (230, 230, 230))
+        if mode_label:
+            draw_dynamic_text(screen, mode_label, FONT, cx, cy + 22, max_text_width, mode_color)
+
         sx = cx - SLIDER_W // 2
         sy = cy + CIRCLE_RADIUS + 15
         draw_slider(sx, sy, SLIDER_W, SLIDER_H, slot.volume)
@@ -607,11 +647,27 @@ while running:
                         
                         # reload active slots
                         for i, slot in enumerate(slots):
-                            if not slot.empty:
-                                add_stem_to_slot(i, os.path.join("Songs", slot.song_name), slot.type)
+                            if slot.empty: continue
+                            if slot.type == "drums": 
+                                song_path = os.path.join("Songs", slot.song_name)
+                                add_stem_to_slot(i, song_path, slot.type)
+                                continue
+
+                            if use_relative_mode:
+                                expected_scale = "minor" if master_scale == "major" else "major"
+                            else:
+                                expected_scale = master_scale # parallel Mode
+                            song_path = os.path.join("Songs", slot.song_name)
+                            print(f"refeshing slot {i} (expect: {expected_scale})...")
+                            add_stem_to_slot(i, song_path, slot.type)
+
                     except Exception as e:
-                        print(e)
+                        print(f"manual tuning error: {e}")
                     
+                    manual_override_open = False
+                    pygame.key.stop_text_input()
+
+                if btn_manual_cancel.collidepoint(mx, my):
                     manual_override_open = False
                     pygame.key.stop_text_input()
 
@@ -619,8 +675,7 @@ while running:
                 if btn_manual_cancel.collidepoint(mx, my):
                     manual_override_open = False
                     pygame.key.stop_text_input()
-
-            continue
+                continue
 
         # stem select inputs
         if panel_open:
