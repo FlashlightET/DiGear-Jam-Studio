@@ -64,7 +64,7 @@ Every song folder **must** contain a `meta.json` file with the song's original d
   - **Left Click (Slider):** Adjust volume for that slot.
   - **Right Click (Filled Circle):** Clear/Unload the slot.
   - **Top-Left Button:** Open Manual Tuning panel.
-  - **Left Click (Stem Shift Button)** Pressing the small shuffle icon in the corner of any slot shifts the bars by 16, effective swapping verses and chorus, etc.
+  - **Left Click (Stem Shift Button)** Pressing the small shuffle icon in the corner of any slot shifts the bars by 16, effectively swapping verses and chorus, etc.
 
 ### Interface
 
