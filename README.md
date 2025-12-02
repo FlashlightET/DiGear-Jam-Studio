@@ -23,6 +23,8 @@ pip install numpy soundfile sounddevice pygame pyrubberband
 The application expects a specific folder structure to load songs correctly. Create a folder named `Songs` in the same directory as the script.
 - NOTE: If you DO NOT have stems for both modes, the system falls back to using relative modes (adding or subtracting 3 semitones) so it should still mix fine.
 
+- PLEASE CHOP ALL STEMS TO YOUR PREFERRED 32 BARS OF THE SONG (or any multiple of 8 but ALL stems must be the same)
+
 **Structure:**
 
 ```text
@@ -66,3 +68,9 @@ Every song folder **must** contain a `meta.json` file with the song's original d
 
   - **Stem Select Panel:** Choose a song folder and a specific stem (Vocals, Bass, Lead, Drums).
   - **Manual Tuning:** Force the engine to shift all active tracks to a specific Key/Mode.
+
+## Demo
+
+### here lmao
+
+
