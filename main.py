@@ -483,6 +483,10 @@ dd_stem = Dropdown(240, 260, 360, 35, ["vocals", "bass", "lead", "drums"], max_d
 dd_key = Dropdown(220, 235, 180, 35, list(KEY_TO_INT.keys()), max_display_items=7)
 dd_scale = Dropdown(440, 235, 180, 35, ["major", "minor"], max_display_items=2)
 
+def darken_color(color, factor=0.6): # one less hard-coded thing
+    r, g, b = color
+    return (int(r * factor), int(g * factor), int(b * factor))
+
 def draw_slider(x, y, w, h, value):
     pygame.draw.rect(screen, SLIDER_COLOR, (x, y, w, h))
     filled = int(w * value)
@@ -546,6 +550,10 @@ while running:
             color = STEM_COLORS.get(slot.type, CIRCLE_COLOR_DEFAULT)
             
         pygame.draw.circle(screen, color, (cx, cy), CIRCLE_RADIUS)
+
+        outline_color = darken_color(color)
+        pygame.draw.circle(screen, color, (cx, cy), CIRCLE_RADIUS)
+        pygame.draw.circle(screen, outline_color, (cx, cy), CIRCLE_RADIUS, 5)
         
         max_text_width = (CIRCLE_RADIUS * 2) - 10
         name = slot.song_name if slot.song_name else "Empty"
