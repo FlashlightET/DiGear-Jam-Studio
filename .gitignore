@@ -181,3 +181,4 @@ cython_debug/
 .cursorindexingignore
 /Songs
 MUSIC CREDITS.txt
+workspace.code-workspace
