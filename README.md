@@ -5,6 +5,7 @@ A real-time Python audio mixing application that automatically synchronizes pitc
 ## Features
 
 - **8 Audio Slots:** Load stems individually into 8 mixer slots.
+- **Saving and Loading:** Make a Jam loop and reload it at a later point.
 - **Auto-Sync:** The first stem loaded sets the "Master" BPM and Key/Mode. All subsequent stems are time-stretched and pitch-shifted to match.
 - **Stem Support:** Dedicated handling for Vocals, Bass, Drums, and Lead.
 - **Manual Override:** Manually force the Master Key, BPM, and Mode (Major/Minor)
@@ -70,6 +71,7 @@ Every song folder **must** contain a `meta.json` file with the song's original d
 
   - **Stem Select Panel:** Choose a song folder and a specific stem (Vocals, Bass, Lead, Drums).
   - **Manual Tuning:** Force the engine to shift all active tracks to a specific Key/Mode/BPM.
+  - **Save and Load:** Save the current Jam Loop and reload it later.
 
 ## Demo
 
