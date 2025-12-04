@@ -4,13 +4,14 @@ A real-time Python audio mixing application that automatically synchronizes pitc
 
 ## Features
 
-- **12 Audio Slots:** Load stems individually into 12 mixer slots.
-- **Saving and Loading:** Make a Jam loop and reload it at a later point.
-- **Auto-Sync:** The first stem loaded sets the "Master" BPM and Key/Mode. All subsequent stems are time-stretched and pitch-shifted to match.
-- **Stem Support:** Dedicated handling for Vocals, Bass, Drums, and Lead.
-- **Manual Override:** Manually force the Master Key, BPM, and Mode (Major/Minor)
-- **Volume Control:** Individual volume sliders for each slot.
-- **Bar Offset:** Stems can have their first half play in the second half of the loop, and vice versa.
+  - **12 Audio Slots:** Load stems individually into 12 mixer slots.
+  - **Auto-Sync:** The first stem loaded sets the "Master" BPM and Key/Mode. All subsequent stems are time-stretched and pitch-shifted to match.
+  - **Stem Support:** Dedicated handling for Vocals, Bass, Drums, and Lead.
+  - **Manual Override:** Manually force the Master Key, BPM, and Mode (Major/Minor).
+  - **Customizable UI:** Support for custom color themes (JSON) and system fonts.
+  - **Musical Notation:** Toggle between Sharp (\#) and Flat (b) notation.
+  - **Save & Load:** Save your current Jam loop layout and mix to reload later.
+  - **Bar Offset:** Shift specific stems by half the loop length to create new arrangements.
 
 ## Prerequisites
 
@@ -18,16 +19,15 @@ You need **Python 3.x** and the following libraries:
 
 ```bash
 pip install numpy soundfile sounddevice pygame pyrubberband
-````
+```
 
 ## Folder Structure
 
-The application expects a specific folder structure to load songs correctly. Create a folder named `Songs` in the same directory as the script.
-- NOTE: If you DO NOT have stems for both modes, the system falls back to using relative modes (adding or subtracting 3 semitones) so it should still mix fine.
+The application requires specific folders to function.
 
-- PLEASE CHOP ALL STEMS TO YOUR PREFERRED 32 BARS OF THE SONG (ALL stems must be the same)
+1.  Create a `Songs` folder for your audio. (default songs will be provided at a later point for testing purposes)
 
-**Structure:**
+**Directory Tree:**
 
 ```text
 ROOT/
@@ -44,6 +44,11 @@ ROOT/
         └── lead_minor.ogg
 ```
 
+### Audio Requirements
+
+  - **Chopping:** Please chop all stems to your preferred 32 bars (All stems must be the exact same length).
+  - **Missing Stems:** If you do not have stems for both modes (Major/Minor), the system falls back to using relative modes (pitch shifting by 3 semitones).
+
 ### meta.json Format
 
 Every song folder **must** contain a `meta.json` file with the song's original data:
@@ -55,27 +60,34 @@ Every song folder **must** contain a `meta.json` file with the song's original d
     "scale": "minor"
 }
 ```
+
 *Valid scales:* major, minor.
 
 ## Controls
 
-### Mouse
+### Mouse Stuff
 
   - **Left Click (Empty Circle):** Open the Stem Select panel.
   - **Left Click (Slider):** Adjust volume for that slot.
   - **Right Click (Filled Circle):** Clear/Unload the slot.
-  - **Top-Left Button:** Open Manual Tuning panel.
-  - **Left Click (Stem Shift Button)** Pressing the small shuffle icon in the corner of any slot shifts the bars by 16, effectively swapping verses and chorus, etc.
+  - **Left Click (Small Offset Button):** Shift the stem by 16 bars (swapping first/second half of the loop).
 
 ### Interface
 
-  - **Stem Select Panel:** Choose a song folder and a specific stem (Vocals, Bass, Lead, Drums).
-  - **Manual Tuning:** Force the engine to shift all active tracks to a specific Key/Mode/BPM.
-  - **Save and Load:** Save the current Jam Loop and reload it later.
+  - **Top-Left (Manual Tune):** Force the engine to shift all active tracks to a specific Key, Mode, or BPM.
+  - **Top-Right (Save/Load):** Save the current slot configurationor load a previous session.
+  - **Also Top-Right (Options):** Open the configuration menu.
+
+## Customization (Options Menu)
+
+Tthe **Options** menu allows you to configure the app.
+
+  - **Theme:** Select a color scheme from the `/themes` folder. You can create your own `.json` theme files following the structure of `default.json`.
+  - **Font:** Select a display font from your installed system fonts.
+  - **Notation:** Toggle the display of keys between **Sharps (\#)** and **Flats (b)**.
 
 ## Demo
 
 ### here lmao
 
 https://github.com/user-attachments/assets/8180722c-60c3-44be-a130-c8213c66f7d9
-
