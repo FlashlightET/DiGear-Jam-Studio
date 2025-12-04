@@ -35,27 +35,30 @@ pygame.display.set_icon(favicon)
 
 PALETTE = {
     # --- main ---
-    "bg_dark": (10, 10, 14),      # main bg
-    "bg_light": (25, 25, 35),     # grid lines
-    "panel_bg": (20, 20, 25),     # panel popouts
-    "overlay": (0, 0, 0, 180),    # dimming overlay
+    "bg_dark": (10, 10, 14), # main bg
+    "bg_light": (25, 25, 35), # grid lines
+    "panel_bg": (20, 20, 25), # panel popouts
+    "overlay": (0, 0, 0, 180), # dimming overlay
+    "popup_bg": (40, 40, 40),
+    "popup_border": (0, 200, 80), # matches "slider_fill" but its good to have a semantic name
+    "hover_outline": (128, 128, 128),
     
     # --- text ---
     "text_main": (240, 240, 255),
     "text_dim": (200, 200, 200),
-    "text_dark": (0, 0, 0),       # outlines
+    "text_dark": (0, 0, 0), # outlines
+    "text_mode_label": (200, 255, 200),
 
     # --- slots ---
     "slot_default": (80, 130, 255),
     "slot_empty": (60, 60, 60),
-    "slot_hover": (128, 128, 128),
     "slot_vocals": (255, 230, 100),
     "slot_bass": (100, 255, 150),
     "slot_drums": (100, 230, 255),
     "slot_lead": (255, 120, 200),
 
     # --- other shit ---
-    "accent": (0, 255, 128),
+    "accent": (80, 130, 255),
     "input_bg": (30, 30, 30),
     "input_border": (60, 60, 60),
     "input_active": (100, 100, 255),
@@ -70,8 +73,8 @@ PALETTE = {
     "btn_manual": (0, 170, 60),
     "btn_save": (230, 120, 40),
     "btn_load": (60, 120, 210),
-    "btn_ctrl": (80, 80, 80),     # play/pause/restart
-    "btn_icon": (198, 198, 198),  # play triangle/pause bars
+    "btn_ctrl": (80, 80, 80), # play/pause/restart
+    "btn_icon": (198, 198, 198), # play triangle/pause bars
     "btn_confirm": (0, 160, 80),
     "btn_confirm_hl": (51, 179, 115), # hl means highlight btw not half life
     "btn_cancel": (160, 60, 60),
@@ -109,30 +112,6 @@ btn_offset_on=pygame.image.load('gui/btn_offset_on.png').convert_alpha()
 btn_offset_hover=pygame.image.load('gui/btn_offset_hover.png').convert_alpha()
 
 # -------------------- ochame kinous -------------------- 
-
-def create_glow_surface(radius, color):
-    surf = pygame.Surface((radius * 2, radius *2), pygame.SRCALPHA)
-    r, g, b = color
-    for i in range(radius, 0, -2):
-        alpha = int(255 * (1 - (i / radius))**2)
-        pygame.draw.circle(surf, (r, g, b, alpha // 4), (radius, radius), i)
-    return surf
-
-def draw_vignette(screen):
-    vig = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
-    pygame.draw.rect(vig, (0,0,0,0), vig.get_rect())
-    pygame.draw.rect(vig, (0,0,0,100), (0,0,SCREEN_W, SCREEN_H), 150) 
-    screen.blit(vig, (0,0))
-
-def draw_glass_panel(rect):
-    s = pygame.Surface((rect.width, rect.height), pygame.SRCALPHA)
-    s.fill(PALETTE["panel_bg"])
-    screen.blit(s, (rect.x, rect.y))
-
-    pygame.draw.rect(screen, (60, 60, 70), rect, 1, border_radius=4)
-    pygame.draw.line(screen, (100, 100, 120), (rect.x+1, rect.y), (rect.right-1, rect.y))
-
-base_glow_img = create_glow_surface(int(CIRCLE_RADIUS * 1.5), (255, 255, 255))
 
 def key_shift_semitones(target_key, source_key):
     # calc semitone diff
@@ -216,7 +195,7 @@ def draw_dynamic_text(surface, text, font, center_x, center_y, max_width, color)
         return
 
     text_surf = font.render(text, True, color)
-    outline_surf = font.render(text, True, (0, 0, 0))
+    outline_surf = font.render(text, True, PALETTE["text_dark"])
 
     width, height = text_surf.get_size()
     if width > max_width:
@@ -354,12 +333,12 @@ class AudioEngine:
 class InputBox:
     def __init__(self, x, y, w, h, text=''):
         self.rect = pygame.Rect(x, y, w, h)
-        self.color_inactive = (60, 60, 60)
-        self.color_active = (100, 100, 255)
+        self.color_inactive = PALETTE["input_border"]
+        self.color_active = PALETTE["input_active"]
         self.color = self.color_inactive
         self.text = text
         self.font = FONT
-        self.txt_surface = self.font.render(text, True, (255, 255, 255))
+        self.txt_surface = self.font.render(text, True, PALETTE["text_main"])
         self.active = False
 
     def handle_event(self, event):
@@ -380,15 +359,12 @@ class InputBox:
                 else:
                     if event.unicode.isnumeric() or (event.unicode == '.' and '.' not in self.text):
                         self.text += event.unicode
-                self.txt_surface = self.font.render(self.text, True, (255, 255, 255))
+                self.txt_surface = self.font.render(self.text, True, PALETTE["text_main"])
         return False
 
     def draw(self, screen):
-        # Draw background
-        pygame.draw.rect(screen, (30, 30, 30), self.rect)
-        # Draw text
+        pygame.draw.rect(screen, PALETTE["input_bg"], self.rect)
         screen.blit(self.txt_surface, (self.rect.x + 10, self.rect.y + 5))
-        # Draw outline
         pygame.draw.rect(screen, self.color, self.rect, 2)
 
 class Dropdown:
@@ -398,11 +374,11 @@ class Dropdown:
         self.index = default_index
         self.is_open = False
         self.font = SMALLERFONT
-        self.active_option_color = (60, 60, 60)
-        self.hover_color = (80, 80, 100)
-        self.bg_color = (40, 40, 40)
-        self.text_color = (255, 255, 255)
-        self.border_color = (100, 100, 100)
+        self.active_option_color = PALETTE["input_border"]
+        self.hover_color = PALETTE["accent"]
+        self.bg_color = PALETTE["input_bg"]
+        self.text_color = PALETTE["text_main"]
+        self.border_color = PALETTE["scrollbar"]
         self.scroll_y = 0
         self.max_display_items = max_display_items
         self.item_height = h
@@ -480,7 +456,7 @@ class Dropdown:
             # scrollbar
             if total_height > display_height:
                 sb_bg_rect = pygame.Rect(self.rect.right - self.scrollbar_width, list_rect.y, self.scrollbar_width, display_height)
-                pygame.draw.rect(screen, (30, 30, 30), sb_bg_rect)
+                pygame.draw.rect(screen, PALETTE["input_bg"], sb_bg_rect)
                 
                 ratio = display_height / total_height
                 thumb_h = max(20, display_height * ratio)
@@ -490,7 +466,7 @@ class Dropdown:
                 thumb_y = list_rect.y + scroll_ratio * (display_height - thumb_h)
                 
                 sb_thumb_rect = pygame.Rect(self.rect.right - self.scrollbar_width + 2, thumb_y, self.scrollbar_width - 4, thumb_h)
-                pygame.draw.rect(screen, (100, 100, 100), sb_thumb_rect, border_radius=4)
+                pygame.draw.rect(screen, PALETTE["scrollbar"], sb_thumb_rect, border_radius=4)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEWHEEL:
@@ -752,15 +728,15 @@ def load_project(screen_surface):
         return
 
     overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
-    overlay.fill((0, 0, 0, 180))
+    overlay.fill(PALETTE["overlay"])
     screen_surface.blit(overlay, (0, 0))
 
     wait_w, wait_h = 300, 100
     wait_rect = pygame.Rect((SCREEN_W - wait_w)//2, (SCREEN_H - wait_h)//2, wait_w, wait_h)
-    pygame.draw.rect(screen_surface, (40, 40, 40), wait_rect)
-    pygame.draw.rect(screen_surface, (0, 200, 80), wait_rect, 3)
+    pygame.draw.rect(screen_surface, PALETTE["popup_bg"], wait_rect)
+    pygame.draw.rect(screen_surface, PALETTE["popup_border"], wait_rect, 3)
 
-    wait_text = BIGFONT.render("loading project", True, (255, 255, 255))
+    wait_text = BIGFONT.render("loading project", True, PALETTE["text_main"])
     screen_surface.blit(wait_text, (wait_rect.centerx - wait_text.get_width()//2, wait_rect.centery - 15))
     pygame.display.flip()
 
@@ -849,32 +825,32 @@ while running:
 
     # manual tune button
     mt_btn_rect = pygame.Rect(20, 20, 200, 40)
-    mt_btn_color = (0, 170, 60)
+    mt_btn_color = PALETTE["btn_manual"]
 
     if mt_btn_rect.collidepoint(mx, my) and not input_blocked:
-        mt_outline_col = (89, 199, 128)
+        mt_outline_col = lighten_color(mt_btn_color, factor=1.2)
     else:
         mt_outline_col = darken_color(mt_btn_color)
 
     pygame.draw.rect(screen, mt_btn_color, mt_btn_rect, border_radius=4)
     pygame.draw.rect(screen, mt_outline_col, mt_btn_rect, 4, border_radius=4)
     
-    screen.blit(FONT.render("Set Manual Tuning", True, (255, 255, 255)), (30, 28))
+    screen.blit(FONT.render("Set Manual Tuning", True, PALETTE["text_main"]), (30, 28))
 
     # save and load buttons
     btn_save_rect = pygame.Rect(SCREEN_W - 220, 20, 90, 40) # (removed border_radius from here why the fuck was it here)
     btn_load_rect = pygame.Rect(SCREEN_W - 120, 20, 90, 40)
 
-    save_col = (230, 120, 40)
-    load_col = (60, 120, 210)
+    save_col = PALETTE["btn_save"]
+    load_col = PALETTE["btn_load"]
 
     if btn_save_rect.collidepoint(mx, my) and not input_blocked:
-        save_outline = (238, 167, 115)
+        save_outline = lighten_color(save_col, 1.2)
     else:
         save_outline = darken_color(save_col)
 
     if btn_load_rect.collidepoint(mx, my) and not input_blocked:
-        load_outline = (128, 167, 225)
+        load_outline = lighten_color(load_col, 1.2)
     else:
         load_outline = darken_color(load_col)
 
@@ -884,8 +860,8 @@ while running:
     pygame.draw.rect(screen, load_col, btn_load_rect, border_radius=4)
     pygame.draw.rect(screen, load_outline, btn_load_rect, 4, border_radius=4)
 
-    screen.blit(FONT.render("Save", True, (255,255,255)), (btn_save_rect.x + 20, btn_save_rect.y + 8))
-    screen.blit(FONT.render("Load", True, (255,255,255)), (btn_load_rect.x + 20, btn_load_rect.y + 8))
+    screen.blit(FONT.render("Save", True, PALETTE["text_main"]), (btn_save_rect.x + 20, btn_save_rect.y + 8))
+    screen.blit(FONT.render("Load", True, PALETTE["text_main"]), (btn_load_rect.x + 20, btn_load_rect.y + 8))
 
     # what
     pulse_val = 0.0
@@ -916,12 +892,12 @@ while running:
     btn_restart_rect = pygame.Rect(ctrl_start_x, ctrl_y, ctrl_btn_w, ctrl_btn_h)
     btn_play_rect = pygame.Rect(ctrl_start_x + ctrl_btn_w + ctrl_gap, ctrl_y, ctrl_btn_w, ctrl_btn_h)
 
-    btn_ctrl_col = (80, 80, 80)
-    icon_col = (198, 198, 198)
+    btn_ctrl_col = PALETTE["btn_ctrl"]
+    icon_col = PALETTE["btn_icon"]
 
     # restart button
     if btn_restart_rect.collidepoint(mx, my) and not input_blocked:
-        restart_outline = (141, 141, 141)
+        restart_outline = lighten_color(btn_ctrl_col, 1.2)
     else:
         restart_outline = darken_color(btn_ctrl_col)
 
@@ -938,7 +914,7 @@ while running:
 
     #pause button
     if btn_play_rect.collidepoint(mx, my) and not input_blocked:
-        play_outline = (141, 141, 141)
+        play_outline = lighten_color(btn_ctrl_col, 1.2)
     else:
         play_outline = darken_color(btn_ctrl_col)
 
@@ -990,7 +966,7 @@ while running:
                 outline_color = darken_color(color)
 
         if is_hovered:
-            outline_color = (128, 128, 128)
+            outline_color = PALETTE["hover_outline"]
             
         pygame.draw.circle(screen, color, (cx, cy), CIRCLE_RADIUS)
         pygame.draw.circle(screen, outline_color, (cx, cy), CIRCLE_RADIUS, 5)
@@ -1000,7 +976,6 @@ while running:
         stype = slot.type if slot.type else ""
 
         mode_label = ""
-        mode_color = (200, 255, 200)
 
         if not slot.empty and slot.type != "drums" and master_scale:
             if slot.scale == master_scale:
@@ -1010,10 +985,10 @@ while running:
         elif not slot.empty and slot.type == "drums":
             mode_label = "Neutral"
 
-        draw_dynamic_text(screen, name, FONT, cx, cy - 22, max_text_width, TEXT_COLOR)
-        draw_dynamic_text(screen, stype, FONT, cx, cy, max_text_width, (230, 230, 230))
+        draw_dynamic_text(screen, name, FONT, cx, cy - 22, max_text_width, PALETTE["text_main"])
+        draw_dynamic_text(screen, stype, FONT, cx, cy, max_text_width, PALETTE["text_dim"])
         if mode_label:
-            draw_dynamic_text(screen, mode_label, FONT, cx, cy + 22, max_text_width, mode_color)
+            draw_dynamic_text(screen, mode_label, FONT, cx, cy + 22, max_text_width, PALETTE["text_mode_label"])
             
         draw_offset_button(cx+30, cy+30, slot.half == 1)
 
@@ -1025,7 +1000,7 @@ while running:
     
     # stem select
     if panel_open:
-        pygame.draw.rect(screen, (30, 30, 30), (220, 125, 400, 300))
+        pygame.draw.rect(screen, PALETTE["input_bg"], (220, 125, 400, 300))
         
         title = BIGFONT.render(f"Slot {selected_slot}", True, TEXT_COLOR)
         screen.blit(title, (300, 135))
@@ -1041,16 +1016,16 @@ while running:
 
         # confirm
         if stem_confirm_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, (51, 179, 115), stem_confirm_rect)
+            pygame.draw.rect(screen, PALETTE["btn_confirm_hl"], stem_confirm_rect)
         else:
-            pygame.draw.rect(screen, (0, 160, 80), stem_confirm_rect)
+            pygame.draw.rect(screen, PALETTE["btn_confirm"], stem_confirm_rect)
         screen.blit(BIGFONT.render("CONFIRM", True, TEXT_COLOR), (275, 335))
 
         # cancel
         if stem_cancel_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, (179, 99, 99), stem_cancel_rect)
+            pygame.draw.rect(screen, PALETTE["btn_cancel_hl"], stem_cancel_rect)
         else:
-            pygame.draw.rect(screen, (160, 60, 60), stem_cancel_rect)
+            pygame.draw.rect(screen, PALETTE["btn_cancel"], stem_cancel_rect)
         screen.blit(BIGFONT.render("CANCEL", True, TEXT_COLOR), (470, 335))
         
         # draw lists last
@@ -1059,7 +1034,7 @@ while running:
 
     # manual tune
     if manual_override_open:
-        pygame.draw.rect(screen, (30, 30, 30), (170, 120, 500, 300))
+        pygame.draw.rect(screen, PALETTE["input_bg"], (170, 120, 500, 300))
         
         title = BIGFONT.render("Manual Tuning Menu", True, TEXT_COLOR)
         screen.blit(title, (280, 135))
@@ -1080,16 +1055,16 @@ while running:
 
         # confirm
         if tune_confirm_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, (51, 179, 115), tune_confirm_rect)
+            pygame.draw.rect(screen, PALETTE["btn_confirm_hl"], tune_confirm_rect)
         else:
-            pygame.draw.rect(screen, (0, 160, 80), tune_confirm_rect)
+            pygame.draw.rect(screen,  PALETTE["btn_confirm"], tune_confirm_rect)
         screen.blit(BIGFONT.render("CONFIRM", True, TEXT_COLOR), (255, 350))
 
         # cancel
         if tune_cancel_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, (179, 99, 99), tune_cancel_rect)
+            pygame.draw.rect(screen,  PALETTE["btn_cancel_hl"], tune_cancel_rect)
         else:
-            pygame.draw.rect(screen, (160, 60, 60), tune_cancel_rect)
+            pygame.draw.rect(screen, PALETTE["btn_cancel"], tune_cancel_rect)
         screen.blit(BIGFONT.render("CANCEL", True, TEXT_COLOR), (470, 350))
         
         mt_key.draw_list(screen)
@@ -1118,16 +1093,16 @@ while running:
                 # confirm click
                 if btn_manual_confirm.collidepoint(mx, my):
                     overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
-                    overlay.fill((0, 0, 0, 180))
+                    overlay.fill(PALETTE["overlay"])
                     screen.blit(overlay, (0, 0))
 
                     wait_w, wait_h = 300, 100
                     wait_rect = pygame.Rect((SCREEN_W - wait_w)//2, (SCREEN_H - wait_h)//2, wait_w, wait_h)
-                    pygame.draw.rect(screen, (40, 40, 40), wait_rect)
-                    pygame.draw.rect(screen, (0, 200, 80), wait_rect, 3)
+                    pygame.draw.rect(screen, PALETTE["panel_bg"], wait_rect)
+                    pygame.draw.rect(screen, PALETTE["slider_fill"], wait_rect, 3)
 
-                    wait_text = BIGFONT.render("Processing...", True, (255, 255, 255))
-                    sub_text = FONT.render("Please Wait", True, (200, 200, 200))
+                    wait_text = BIGFONT.render("Processing...", True, PALETTE["text_main"])
+                    sub_text = FONT.render("Please Wait", True, PALETTE["text_dim"])
                     
                     screen.blit(wait_text, (wait_rect.centerx - wait_text.get_width()//2, wait_rect.y + 20))
                     screen.blit(sub_text, (wait_rect.centerx - sub_text.get_width()//2, wait_rect.y + 60))
@@ -1158,16 +1133,14 @@ while running:
                         
                         for data in slots_to_reload:
                             print(f"reloading slot {data['id']}")
-                            
-                            pygame.draw.rect(screen, (40, 40, 40), wait_rect)
-                            pygame.draw.rect(screen, (0, 200, 80), wait_rect, 3)
-                            
-                            header_text = FONT.render("currently tuning:", True, (200, 200, 200))
                             info_str = f"{data['name']} ({data['type']})"
-                            info_text = FONT.render(info_str, True, (255, 255, 255))
+                            
+                            pygame.draw.rect(screen, PALETTE["popup_bg"], wait_rect)
+                            pygame.draw.rect(screen, PALETTE["popup_border"], wait_rect, 3)
+                            header_text = FONT.render("currently tuning:", True, PALETTE["text_dim"])
+                            info_text = FONT.render(info_str, True, PALETTE["text_main"])
+                            draw_dynamic_text(..., PALETTE["text_main"])
 
-                            screen.blit(header_text, (wait_rect.centerx - header_text.get_width()//2, wait_rect.centery - 30))
-                            draw_dynamic_text(screen, info_str, FONT, wait_rect.centerx, wait_rect.centery + 5, wait_rect.width - 20, (255, 255, 255))
                             pygame.display.flip()
 
                             if use_relative_mode:
@@ -1247,7 +1220,7 @@ while running:
                 else:
                     mt_bpm.text = ""
 
-                mt_bpm.txt_surface = mt_bpm.font.render(mt_bpm.text, True, (255, 255, 255))
+                mt_bpm.txt_surface = mt_bpm.font.render(mt_bpm.text, True, PALETTE["text_main"])
 
                 if master_key and master_key in mt_key.options:
                     mt_key.index = mt_key.options.index(master_key)
@@ -1265,15 +1238,15 @@ while running:
                 load_project(screen)
                 if master_bpm:
                     mt_bpm.text = str(int(master_bpm))
-                    mt_bpm.txt_surface = mt_bpm.font.render(mt_bpm.text, True, (255, 255, 255))
+                    mt_bpm.txt_surface = mt_bpm.font.render(mt_bpm.text, True, PALETTE["text_main"])
 
                 # bpm typer
                 if master_bpm:
                     mt_bpm.text = str(int(master_bpm))
-                    mt_bpm.txt_surface = mt_bpm.font.render(mt_bpm.text, True, (255, 255, 255))
+                    mt_bpm.txt_surface = mt_bpm.font.render(mt_bpm.text, True, PALETTE["text_main"])
                 else:
                     mt_bpm.text = ""
-                    mt_bpm.txt_surface = mt_bpm.font.render("", True, (255, 255, 255))
+                    mt_bpm.txt_surface = mt_bpm.font.render("", True, PALETTE["text_main"])
                 
                 # sync dropdowns
                 if master_key and master_key in mt_key.options: 
@@ -1353,7 +1326,7 @@ while running:
     
     # rendering
     stats_surf = BIGFONT.render(stats_text, True, TEXT_COLOR)
-    stats_outline = BIGFONT.render(stats_text, True, (0, 0, 0))
+    stats_outline = BIGFONT.render(stats_text, True, PALETTE["text_dark"])
 
     # pos
     stat_x = 19
