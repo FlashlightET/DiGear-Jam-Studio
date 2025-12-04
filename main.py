@@ -691,7 +691,7 @@ def draw_offset_button(x, y, state):
         screen.blit(btn_offset_on, (x,y))
         
     #hover highlight
-    if x <= mx < x+32 and y <= my < y+32:
+    if x <= mx < x+32 and y <= my < y+32 and not input_blocked:
         screen.blit(btn_offset_hover, (x,y))
 
 def draw_dynamic_text(surface, text, font, center_x, center_y, max_width, color):
@@ -734,6 +734,8 @@ while running:
 
     mx, my = pygame.mouse.get_pos() # where tf are we
 
+    input_blocked = panel_open or manual_override_open
+
     # slider sm64
     lerp_speed = 0.33
     
@@ -749,7 +751,7 @@ while running:
     mt_btn_rect = pygame.Rect(20, 20, 200, 40)
     mt_btn_color = (0, 170, 60)
 
-    if mt_btn_rect.collidepoint(mx, my):
+    if mt_btn_rect.collidepoint(mx, my) and not input_blocked:
         mt_outline_col = (89, 199, 128)
     else:
         mt_outline_col = darken_color(mt_btn_color)
@@ -766,12 +768,12 @@ while running:
     save_col = (230, 120, 40)
     load_col = (60, 120, 210)
 
-    if btn_save_rect.collidepoint(mx, my):
+    if btn_save_rect.collidepoint(mx, my) and not input_blocked:
         save_outline = (238, 167, 115)
     else:
         save_outline = darken_color(save_col)
 
-    if btn_load_rect.collidepoint(mx, my):
+    if btn_load_rect.collidepoint(mx, my) and not input_blocked:
         load_outline = (128, 167, 225)
     else:
         load_outline = darken_color(load_col)
@@ -811,7 +813,7 @@ while running:
     btn_play_rect = pygame.Rect(btn_play_x, btn_play_y, btn_play_w, btn_play_h)
     btn_play_col = (80, 80, 80)
 
-    if btn_play_rect.collidepoint(mx, my):
+    if btn_play_rect.collidepoint(mx, my) and not input_blocked:
         play_outline = (141, 141, 141)
     else:
         play_outline = darken_color(btn_play_col)
@@ -849,7 +851,7 @@ while running:
         cy = 150 + (i // 4) * 250
         
         dist = (mx - cx)**2 + (my - cy)**2
-        is_hovered = dist <= CIRCLE_RADIUS**2
+        is_hovered = dist <= CIRCLE_RADIUS**2 and not input_blocked
 
         if slot.empty:
             color = CIRCLE_COLOR_EMPTY
@@ -911,13 +913,22 @@ while running:
         screen.blit(FONT.render("Stem:", True, TEXT_COLOR), (240, 235))
         dd_stem.draw(screen)
 
+        stem_confirm_rect =  pygame.Rect(240, 325, 170, 50)
+        stem_cancel_rect = pygame.Rect(430, 325, 170, 50)
+
         # confirm
-        pygame.draw.rect(screen, (0, 160, 80), (240, 325, 170, 50))
-        screen.blit(BIGFONT.render("Confirm", True, TEXT_COLOR), (275, 335))
+        if stem_confirm_rect.collidepoint(mx, my):
+            pygame.draw.rect(screen, (51, 179, 115), stem_confirm_rect)
+        else:
+            pygame.draw.rect(screen, (0, 160, 80), stem_confirm_rect)
+        screen.blit(BIGFONT.render("CONFIRM", True, TEXT_COLOR), (275, 335))
 
         # cancel
-        pygame.draw.rect(screen, (160, 60, 60), (430, 325, 170, 50))
-        screen.blit(BIGFONT.render("Cancel", True, TEXT_COLOR), (470, 335))
+        if stem_cancel_rect.collidepoint(mx, my):
+            pygame.draw.rect(screen, (179, 99, 99), stem_cancel_rect)
+        else:
+            pygame.draw.rect(screen, (160, 60, 60), stem_cancel_rect)
+        screen.blit(BIGFONT.render("CANCEL", True, TEXT_COLOR), (470, 335))
         
         # draw lists last
         dd_song.draw_list(screen)
@@ -941,12 +952,21 @@ while running:
         mt_scale.rect.y = 260
         mt_scale.draw(screen)
 
-        btn_confirm_rect = pygame.Rect(230, 340, 180, 50)
-        pygame.draw.rect(screen, (0, 160, 80), btn_confirm_rect)
+        tune_confirm_rect =  pygame.Rect(230, 340, 180, 50)
+        tune_cancel_rect = pygame.Rect(430, 340, 180, 50)
+
+        # confirm
+        if tune_confirm_rect.collidepoint(mx, my):
+            pygame.draw.rect(screen, (51, 179, 115), tune_confirm_rect)
+        else:
+            pygame.draw.rect(screen, (0, 160, 80), tune_confirm_rect)
         screen.blit(BIGFONT.render("CONFIRM", True, TEXT_COLOR), (255, 350))
-        
-        btn_cancel_rect = pygame.Rect(430, 340, 180, 50)
-        pygame.draw.rect(screen, (160, 60, 60), btn_cancel_rect)
+
+        # cancel
+        if tune_cancel_rect.collidepoint(mx, my):
+            pygame.draw.rect(screen, (179, 99, 99), tune_cancel_rect)
+        else:
+            pygame.draw.rect(screen, (160, 60, 60), tune_cancel_rect)
         screen.blit(BIGFONT.render("CANCEL", True, TEXT_COLOR), (470, 350))
         
         mt_key.draw_list(screen)
