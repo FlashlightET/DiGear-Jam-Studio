@@ -70,7 +70,7 @@ class Slot:
         self.half = 0
 
 # init slots
-slots = [Slot() for _ in range(8)]
+slots = [Slot() for _ in range(12)]
 master_bpm = None
 master_key = None
 master_scale = None
@@ -368,7 +368,7 @@ def load_project(screen_surface):
         master_key = data["master"]["key"]
         master_scale = data["master"]["scale"]
         
-        for i in range(8):
+        for i in range(12):
             clear_slot(i)
         
         audio_engine.max_length = 0
@@ -402,7 +402,7 @@ def load_project(screen_surface):
 # -------------------- fuckin pygame STUPID SHIT FUCK I HATE PYGAME AAAAA -------------------- 
 
 pygame.init()
-SCREEN_W, SCREEN_H = 840, 550
+SCREEN_W, SCREEN_H = 840, 825
 screen = pygame.display.set_mode((SCREEN_W, SCREEN_H))
 pygame.display.set_caption("DiGear Jam Studio")
 favicon = pygame.image.load("favicon.png")
@@ -645,11 +645,11 @@ def load_stem_direct(path):
     return audio
 
 # stem select
-dd_song = Dropdown(240, 200, 360, 35, get_song_list(), max_display_items=7)
+dd_song = Dropdown(240, 200, 360, 35, get_song_list(), max_display_items=16)
 dd_stem = Dropdown(240, 260, 360, 35, ["vocals", "bass", "lead", "drums"], max_display_items=4)
 
 # manual tune
-mt_key = Dropdown(220, 235, 180, 35, list(KEY_TO_INT.keys()), max_display_items=6)
+mt_key = Dropdown(220, 235, 180, 35, list(KEY_TO_INT.keys()), max_display_items=12)
 mt_scale = Dropdown(440, 235, 180, 35, ["major", "minor"], max_display_items=2)
 mt_bpm = InputBox(370, 200, 100, 35)
 
@@ -821,10 +821,10 @@ while running:
         pygame.draw.polygon(screen, icon_col, pts)
 
     # draw slots
-    for i in range(8):
+    for i in range(12):
         slot = slots[i]
         cx = 120 + (i % 4) * 200
-        cy = 150 if i < 4 else 400
+        cy = 150 + (i // 4) * 250
         
         if slot.empty:
             color = CIRCLE_COLOR_EMPTY
@@ -1116,16 +1116,16 @@ while running:
 
             # right click clear slot
             if event.button == 3:
-                for i in range(8):
+                for i in range(12):
                     cx = 120 + (i % 4) * 200
-                    cy = 150 if i < 4 else 400
+                    cy = 150 + (i // 4) * 250
                     if (mx - cx)**2 + (my - cy)**2 < CIRCLE_RADIUS**2:
                         clear_slot(i)
                         break
 
             # left click slider or open panel
             if event.button == 1:
-                for slot_index in range(8):
+                for slot_index in range(12):
                 
                     slot_button_clicked = False # used to defuse priority tantrums
                     
@@ -1142,7 +1142,7 @@ while running:
                     
                     if not slot_button_clicked:
                         cx = 120 + (slot_index % 4) * 200
-                        cy = 150 if slot_index < 4 else 400
+                        cy = 150 + (slot_index // 4) * 250
                         sx = cx - SLIDER_W // 2
                         sy = cy + CIRCLE_RADIUS + 15
                         
