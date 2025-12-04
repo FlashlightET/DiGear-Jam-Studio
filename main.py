@@ -1277,14 +1277,17 @@ while running:
 
                     wait_w, wait_h = 300, 100
                     wait_rect = pygame.Rect((SCREEN_W - wait_w)//2, (SCREEN_H - wait_h)//2, wait_w, wait_h)
+                    
+                    wait_text = BIGFONT.render("processing...", True, PALETTE["text_main"])
+                    sub_text = FONT.render("please Wait", True, PALETTE["text_dim"])
+
+                    txt_rect1 = wait_text.get_rect(centerx=wait_rect.centerx, centery=wait_rect.centery - 15)
+                    txt_rect2 = sub_text.get_rect(centerx=wait_rect.centerx, centery=wait_rect.centery + 15)
+
                     pygame.draw.rect(screen, PALETTE["panel_bg"], wait_rect)
                     pygame.draw.rect(screen, PALETTE["slider_fill"], wait_rect, 3)
-
-                    wait_text = BIGFONT.render("processing...", True, PALETTE["text_main"])
-                    sub_text = FONT.render("please wait", True, PALETTE["text_dim"])
-                    
-                    screen.blit(wait_text, (wait_rect.centerx - wait_text.get_width()//2, wait_rect.y + 20))
-                    screen.blit(sub_text, (wait_rect.centerx - sub_text.get_width()//2, wait_rect.y + 60))
+                    screen.blit(wait_text, txt_rect1)
+                    screen.blit(sub_text, txt_rect2)
                     pygame.display.flip()
 
                     try:
@@ -1312,14 +1315,13 @@ while running:
                         
                         for data in slots_to_reload:
                             print(f"reloading slot {data['id']}")
-                            info_str = f"{data['name']} ({data['type']})"
                             
                             pygame.draw.rect(screen, PALETTE["panel_bg"], wait_rect)
                             pygame.draw.rect(screen, PALETTE["slider_fill"], wait_rect, 3)
-
-                            screen.blit(wait_text, (wait_rect.centerx - wait_text.get_width()//2, wait_rect.y + 20))
-                            screen.blit(sub_text, (wait_rect.centerx - sub_text.get_width()//2, wait_rect.y + 60))
-
+                            
+                            screen.blit(wait_text, txt_rect1)
+                            screen.blit(sub_text, txt_rect2)
+                            
                             pygame.display.flip()
 
                             if use_relative_mode:
