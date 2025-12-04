@@ -112,21 +112,19 @@ class AudioEngine:
         pos = self.position
 
         for slot in self.slots:
-        
-            # Make an offset position for the current stem
-            offset_pos=(pos+slot.offset) % self.max_length 
             
             if slot.empty or slot.stem is None:
                 continue
 
             audio = slot.stem
             length = len(audio)
+
             if length == 0:
                 continue
 
+            offset_pos = (pos + slot.offset) % length
+
             end = offset_pos + frames
-            
-            # handle wrap around
             if end <= length:
                 chunk = audio[offset_pos:end]
             else:
