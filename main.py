@@ -273,7 +273,8 @@ class AudioEngine:
             if length == 0:
                 continue
 
-            offset_pos = (pos + slot.offset) % length
+            current_offset = (length // 2) if slot.half == 1 else 0
+            offset_pos = (pos + current_offset) % length
 
             end = offset_pos + frames
             if end <= length:
@@ -678,12 +679,7 @@ def clear_slot(i):
     
 def shift_slot(i):
     slot = slots[i]
-    if slot.half == 0:
-        slot.half = 1
-        slot.offset = audio_engine.max_length // 2
-    else:
-        slot.half = 0
-        slot.offset = 0
+    slot.half = 1 if slot.half == 0 else 0\
 
 def toggle_playback():
     if audio_engine.stream and audio_engine.stream.active:
@@ -770,9 +766,8 @@ def load_project(screen_surface):
                 s.volume = slot_data["volume"]
                 s.target_volume = slot_data["volume"]
                 s.half = slot_data["half"]
-                
-                if s.half == 1 and not s.empty:
-                      s.offset = audio_engine.max_length // 2
+                pass
+
             else:
                 print(f"'{song_name}' not found during load.")
 
