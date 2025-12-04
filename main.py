@@ -176,6 +176,11 @@ except:
 
 # -------------------- ochame kinous -------------------- 
 
+def draw_text_centered(text, font, color, target_rect):
+    surf = font.render(text, True, color)
+    text_rect = surf.get_rect(center=target_rect.center)
+    screen.blit(surf, text_rect)
+
 def get_display_key(key_str):
     if not key_str: return "???"
     idx = KEY_TO_INT.get(key_str, 0) 
@@ -828,8 +833,7 @@ def load_project(screen_surface):
     pygame.draw.rect(screen_surface, PALETTE["popup_bg"], wait_rect)
     pygame.draw.rect(screen_surface, PALETTE["popup_border"], wait_rect, 3)
 
-    wait_text = BIGFONT.render("loading project", True, PALETTE["text_main"])
-    screen_surface.blit(wait_text, (wait_rect.centerx - wait_text.get_width()//2, wait_rect.centery - 15))
+    draw_text_centered("loading project", BIGFONT, PALETTE["text_main"], wait_rect)
     pygame.display.flip()
 
     try:
@@ -932,7 +936,7 @@ while running:
     pygame.draw.rect(screen, mt_btn_color, mt_btn_rect, border_radius=4)
     pygame.draw.rect(screen, mt_outline_col, mt_btn_rect, 4, border_radius=4)
     
-    screen.blit(FONT.render("Set Manual Tuning", True, PALETTE["text_main"]), (30, 28))
+    draw_text_centered("Set Manual Tuning", FONT, PALETTE["text_main"], mt_btn_rect)
 
     # save and load buttons
     btn_save_rect = pygame.Rect(SCREEN_W - 320, 20, 90, 40)
@@ -957,8 +961,8 @@ while running:
     pygame.draw.rect(screen, load_col, btn_load_rect, border_radius=4)
     pygame.draw.rect(screen, load_outline, btn_load_rect, 4, border_radius=4)
 
-    screen.blit(FONT.render("Save", True, PALETTE["text_main"]), (btn_save_rect.x + 20, btn_save_rect.y + 8))
-    screen.blit(FONT.render("Load", True, PALETTE["text_main"]), (btn_load_rect.x + 20, btn_load_rect.y + 8))
+    draw_text_centered("Save", FONT, PALETTE["text_main"], btn_save_rect)
+    draw_text_centered("Load", FONT, PALETTE["text_main"], btn_load_rect)
 
     # option button
     btn_opt_rect = pygame.Rect(SCREEN_W - 120, 20, 90, 40)
@@ -970,7 +974,7 @@ while running:
         
     pygame.draw.rect(screen, PALETTE["btn_ctrl"], btn_opt_rect, border_radius=4)
     pygame.draw.rect(screen, opt_outline, btn_opt_rect, 4, border_radius=4)
-    screen.blit(FONT.render("Options", True, PALETTE["text_main"]), (btn_opt_rect.x + 12, btn_opt_rect.y + 8))
+    draw_text_centered("Options", FONT, PALETTE["text_main"], btn_opt_rect)
 
     # what
     pulse_val = 0.0
@@ -1128,14 +1132,14 @@ while running:
             pygame.draw.rect(screen, PALETTE["btn_confirm_hl"], stem_confirm_rect)
         else:
             pygame.draw.rect(screen, PALETTE["btn_confirm"], stem_confirm_rect)
-        screen.blit(BIGFONT.render("CONFIRM", True, TEXT_COLOR), (275, 335))
+        draw_text_centered("CONFIRM", BIGFONT, TEXT_COLOR, stem_confirm_rect)
 
         # cancel
         if stem_cancel_rect.collidepoint(mx, my):
             pygame.draw.rect(screen, PALETTE["btn_cancel_hl"], stem_cancel_rect)
         else:
             pygame.draw.rect(screen, PALETTE["btn_cancel"], stem_cancel_rect)
-        screen.blit(BIGFONT.render("CANCEL", True, TEXT_COLOR), (470, 335))
+        draw_text_centered("CANCEL", BIGFONT, TEXT_COLOR, stem_cancel_rect)
         
         # draw lists last
         dd_song.draw_list(screen)
@@ -1168,14 +1172,14 @@ while running:
             pygame.draw.rect(screen, PALETTE["btn_confirm_hl"], tune_confirm_rect)
         else:
             pygame.draw.rect(screen,  PALETTE["btn_confirm"], tune_confirm_rect)
-        screen.blit(BIGFONT.render("CONFIRM", True, TEXT_COLOR), (255, 350))
+        draw_text_centered("CONFIRM", BIGFONT, TEXT_COLOR, tune_confirm_rect)
 
         # cancel
         if tune_cancel_rect.collidepoint(mx, my):
             pygame.draw.rect(screen,  PALETTE["btn_cancel_hl"], tune_cancel_rect)
         else:
             pygame.draw.rect(screen, PALETTE["btn_cancel"], tune_cancel_rect)
-        screen.blit(BIGFONT.render("CANCEL", True, TEXT_COLOR), (470, 350))
+        draw_text_centered("CANCEL", BIGFONT, TEXT_COLOR, tune_cancel_rect)
         
         mt_key.draw_list(screen)
         mt_scale.draw_list(screen)
@@ -1202,8 +1206,7 @@ while running:
         pygame.draw.rect(screen, not_col, opt_notation_btn)
         pygame.draw.rect(screen, PALETTE["text_dark"], opt_notation_btn, 2)
         
-        not_surf = FONT.render(not_text, True, PALETTE["text_main"])
-        screen.blit(not_surf, (opt_notation_btn.centerx - not_surf.get_width()//2, opt_notation_btn.centery - not_surf.get_height()//2))
+        draw_text_centered(not_text, FONT, PALETTE["text_main"], opt_notation_btn)
 
         opt_close_rect = pygame.Rect(335, 480, 170, 50)
         if opt_close_rect.collidepoint(mx, my):
@@ -1211,7 +1214,7 @@ while running:
         else:
              pygame.draw.rect(screen, PALETTE["btn_confirm"], opt_close_rect)
         
-        screen.blit(BIGFONT.render("CLOSE", True, TEXT_COLOR), (375, 490))
+        draw_text_centered("CLOSE", BIGFONT, TEXT_COLOR, opt_close_rect)
 
         opt_theme_dd.draw_list(screen)
         opt_font_dd.draw_list(screen)
