@@ -888,7 +888,7 @@ dd_song = Dropdown(240, 200, 360, 35, get_song_list(), max_display_items=16)
 dd_stem = Dropdown(240, 260, 360, 35, ["vocals", "bass", "lead", "drums"], max_display_items=4)
 
 # manual tune
-mt_key = Dropdown(220, 235, 180, 35, list(KEY_TO_INT.keys()), max_display_items=12)
+mt_key = Dropdown(220, 235, 180, 35, KEYS_FLAT if USE_FLATS else KEYS_SHARP, max_display_items=12)
 mt_scale = Dropdown(440, 235, 180, 35, ["major", "minor"], max_display_items=2)
 mt_bpm = InputBox(370, 200, 100, 35)
 
@@ -1250,6 +1250,9 @@ while running:
                 if opt_notation_btn.collidepoint(mx, my):
                     USE_FLATS = not USE_FLATS
                     save_config()
+
+                    new_keys = KEYS_FLAT if USE_FLATS else KEYS_SHARP
+                    mt_key.update_options(new_keys)
                 
                 opt_close_rect = pygame.Rect(335, 480, 170, 50)
                 if opt_close_rect.collidepoint(mx, my):
