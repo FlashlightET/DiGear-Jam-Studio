@@ -1,6 +1,7 @@
 import os
 import json
 import math
+import datetime
 import numpy as np
 import soundfile as sf
 import pyrubberband as rb
@@ -799,6 +800,42 @@ def toggle_playback():
 
 # -------------------- DETERMINATION -------------------- 
 
+def export_mix_to_wav(filename="export.wav"):
+    print("starting export")
+
+    max_len = audio_engine.max_length
+    if max_len == 0:
+        print("sorry nothing")
+        return
+    
+    master_mix = np.zeros((max_len, CHANNELS), dtype=np.float32)
+
+    for slot in slots:
+        if slot.empty or slot.stem is None:
+            continue
+
+        audio = slot.stem
+        sl_len = len(audio)
+
+        offset_samples = (sl_len // 2) if slot.half == 1 else 0
+        processed_audio = np.roll(audio, -offset_samples, axis=0)
+
+        if sl_len < max_len:
+            repeats = (max_len // sl_len) + 1
+            tiled = np.tile(processed_audio, (repeats, 1))
+            processed_audio = tiled[:max_len]
+        elif sl_len > max_len:
+            processed_audio = processed_audio[:max_len]
+        master_mix +=-processed_audio * slot.volume
+    
+    master_mix = np.clip(master_mix, -1.0, 1.0)
+
+    try:
+        sf.write(filename, master_mix, sample_rate)
+        print(f"exported to {filename}")
+    except Exception as e:
+        print(f"export failed {e}")
+
 def save_project():
     data = {
         "master": {
@@ -946,6 +983,23 @@ while running:
     pygame.draw.rect(screen, mt_outline_col, mt_btn_rect, 4, border_radius=4)
     
     draw_text_centered("Set Manual Tuning", FONT, PALETTE["text_main"], mt_btn_rect)
+
+    # export WAV button
+    btn_exp_w = 140
+    btn_exp_h = 40
+    btn_exp_rect = pygame.Rect(SCREEN_W - btn_exp_w - 20, SCREEN_H - btn_exp_h - 20, btn_exp_w, btn_exp_h)
+
+    exp_col = PALETTE["accent"]
+
+    if btn_exp_rect.collidepoint(mx, my) and not input_blocked:
+        exp_outline = lighten_color(exp_col, 1.2)
+    else:
+        exp_outline = darken_color(exp_col)
+
+    pygame.draw.rect(screen, exp_col, btn_exp_rect, border_radius=4)
+    pygame.draw.rect(screen, exp_outline, btn_exp_rect, 4, border_radius=4)
+
+    draw_text_centered("Export WAV", FONT, PALETTE["text_main"], btn_exp_rect)
 
     # save and load buttons
     btn_save_rect = pygame.Rect(SCREEN_W - 320, 20, 90, 40)
@@ -1398,6 +1452,28 @@ while running:
 
         # main screen inputs
         if event.type == pygame.MOUSEBUTTONDOWN:
+
+            #expor
+            if btn_exp_rect.collidepoint(mx, my) and  event.button == 1:
+                overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
+                overlay.fill(PALETTE["overlay"])
+                screen.blit(overlay, (0, 0))
+
+                wait_w, wait_h = 300, 100
+                wait_rect = pygame.Rect((SCREEN_W - wait_w)//2, (SCREEN_H - wait_h)//2, wait_w, wait_h)
+
+                pygame.draw.rect(screen, PALETTE["popup_bg"], wait_rect)
+                pygame.draw.rect(screen, PALETTE["popup_border"], wait_rect, 3)
+                draw_text_centered("Rendering WAV...", BIGFONT, PALETTE["text_main"], wait_rect)
+
+                pygame.display.flip()
+
+                now = datetime.datetime.now()
+                timestamp = now.isoformat()[:19].replace(":", "-")
+                filename = f"jam_{timestamp}.wav"
+
+                export_mix_to_wav(filename)
+                continue
 
             #pause play restart
             if btn_restart_rect.collidepoint(mx, my) and event.button == 1:
