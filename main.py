@@ -1243,6 +1243,11 @@ while running:
                     mt_bpm.txt_surface = mt_bpm.font.render(mt_bpm.text, True, PALETTE["text_main"])
                     opt_theme_dd.font = SMALLERFONT
                     opt_font_dd.font = SMALLERFONT
+                    dd_song.font = SMALLERFONT
+                    dd_stem.font = SMALLERFONT
+                    mt_key.font = SMALLERFONT
+                    mt_scale.font = SMALLERFONT
+
                     save_config()
                 continue
             
