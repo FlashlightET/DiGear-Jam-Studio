@@ -68,43 +68,48 @@ except:
 
 # ---------- theme shit ----------
 
-palette = {  # these are the same values used in the "default.json" this is just fallback shit
-    # ALSO PEP 8 makes this unclear if it should be caps or not
-    # but it looks better lowercased
-    "bg_dark": (10, 10, 14),
-    "bg_light": (25, 25, 35),
-    "panel_bg": (20, 20, 25),
-    "overlay": (0, 0, 0, 180),
-    "popup_bg": (40, 40, 40),
-    "popup_border": (0, 200, 80),
-    "hover_outline": (128, 128, 128),
-    "text_main": (240, 240, 255),
-    "text_dim": (200, 200, 200),
-    "text_dark": (0, 0, 0),
-    "text_mode_label": (200, 255, 200),
-    "slot_default": (80, 130, 255),
-    "slot_empty": (60, 60, 60),
+# these are the same values used in the "default.json" this is just fallback shit
+# ALSO PEP 8 makes this unclear if it should be caps or not
+# but it looks better lowercased
+
+# if i didnt put a comment i thought it was self explanatory enough
+palette = {
+    "bg_dark": (18, 18, 18),  # main background
+    "bg_light": (45, 45, 45),  # grid lines
+    "panel_bg": (30, 30, 30),
+    "overlay": (0, 0, 0, 160),  # dimming color
+    "input_bg": (40, 40, 40),  # this is for text inputs and drop downs
+    "input_border": (70, 70, 70),  # when its unfocused or not clicked on or whatever
+    "input_active": (60, 140, 220),  # when the box is clicked on
+    "scrollbar": (80, 80, 80),
+    "hover_outline": (200, 200, 200),
+    "text_main": (230, 230, 230),
+    "text_dim": (150, 150, 150),  # metadata and labels and shit
+    "text_dark": (20, 20, 20),  # used on brighter buttons
+    "text_mode_label": (160, 210, 160),
+    "slot_empty": (50, 50, 50),
+    "slot_default": (100, 100, 100),
     "slot_vocals": (255, 230, 100),
     "slot_bass": (100, 255, 150),
     "slot_drums": (100, 230, 255),
     "slot_lead": (255, 120, 200),
-    "accent": (80, 130, 255),
-    "input_bg": (30, 30, 30),
-    "input_border": (60, 60, 60),
-    "input_active": (100, 100, 255),
-    "scrollbar": (100, 100, 100),
-    "slider_track": (120, 120, 120),
-    "slider_fill": (0, 200, 80),
-    "slider_knob": (255, 255, 255),
-    "btn_manual": (0, 170, 60),
-    "btn_save": (230, 120, 40),
-    "btn_load": (60, 120, 210),
-    "btn_ctrl": (80, 80, 80),
-    "btn_icon": (198, 198, 198),
-    "btn_confirm": (0, 160, 80),
-    "btn_confirm_hl": (51, 179, 115),
-    "btn_cancel": (160, 60, 60),
-    "btn_cancel_hl": (179, 99, 99),
+    "slider_track": (60, 60, 60),
+    "slider_fill": (60, 140, 220),
+    "slider_knob": (240, 240, 240),
+    "accent": (60, 140, 220),  # used for random shit including the export wav button because why not
+    "btn_confirm": (50, 160, 80),
+    "btn_cancel": (180, 60, 60),
+    "btn_save": (50, 160, 80),
+    "btn_load": (60, 140, 220),
+    "btn_manual": (140, 80, 180),
+    "btn_ctrl": (50, 50, 50),
+    "btn_icon": (200, 200, 200),  # used for the vectorized icons found on buttons
+    "popup_bg": (35, 35, 35),
+    "popup_border": (60, 140, 220),
+    "btn_mute_active": (220, 140, 40),
+    "btn_solo_active": (60, 140, 220),
+    "btn_half_active": (200, 80, 200),
+    "btn_inactive": (50, 50, 50),
 }
 
 circle_color_empty = None
@@ -115,8 +120,9 @@ slider_color = None
 slider_fill = None
 slider_tip = None
 
-FONT_SETTINGS = [  # i dont fucking know if PEP 8 specifies this to be capitalized or not
-    # im making it capitalized since its like a global config thing even though its NOT a constant
+# i dont fucking know if PEP 8 specifies this to be capitalized or not
+# im making it capitalized since its like a global config thing even though its NOT a constant
+FONT_SETTINGS = [
     "Arial",  # default font
     20,
     22,
@@ -300,7 +306,7 @@ def draw_slider(x, y, w, h, value):
 
 
 def draw_half_offset(surface, x, y, active, hovered):
-    base_color = palette["accent"] if active else (60, 60, 60)
+    base_color = palette["btn_half_active"] if active else palette["btn_inactive"]
 
     if hovered:
         color_bg = lighten_color(base_color, 1.2)
@@ -321,6 +327,39 @@ def draw_half_offset(surface, x, y, active, hovered):
     surface.blit(txt, txt_rect)
 
 
+# we use this like 5 places why was it not already a helper function
+def draw_action_button(surface, text, rect, base_color, mx, my, font=None):
+    if font is None:
+        font = FONT_LARGE
+
+    if rect.collidepoint(mx, my):
+        draw_color = lighten_color(base_color, 1.2)
+    else:
+        draw_color = base_color
+
+    pygame.draw.rect(surface, draw_color, rect, border_radius=4)
+
+    border_col = darken_color(base_color, 0.8)
+    pygame.draw.rect(surface, border_col, rect, 2, border_radius=4)
+
+    # this determines if it should be dark or not based on the color of the action buttons on the current theme
+    # not ENTIRELY sure if this is overengineered bullshit but i was getting annoyed making the themes
+
+    # honestly it looks kind of fucking stupid but its the best i could think of at 5 am
+
+    # actually on the gameboy theme it looks cool as fuck
+
+    r, g, b = base_color
+    brightness = r * 0.299 + g * 0.587 + b * 0.114
+
+    if brightness > 140:
+        text_col = palette["text_dark"]
+    else:
+        text_col = palette["text_main"]
+
+    draw_text_centered(text, font, text_col, rect)
+
+
 def draw_mute_solo(surface, x, y, muted, soloed, mx, my):
     btn_size = 20
     gap = 4
@@ -328,14 +367,15 @@ def draw_mute_solo(surface, x, y, muted, soloed, mx, my):
     # mute Button
     r_mute = pygame.Rect(x, y, btn_size, btn_size)
 
-    mute_base = palette["btn_save"] if muted else (60, 60, 60)
+    mute_base = palette["btn_mute_active"] if muted else palette["btn_inactive"]
+
     if r_mute.collidepoint(mx, my):
         col_m = lighten_color(mute_base, 1.2)
     else:
         col_m = mute_base
 
     pygame.draw.rect(surface, col_m, r_mute, border_radius=3)
-    pygame.draw.rect(surface, (150, 150, 150), r_mute, 1, border_radius=3)
+    pygame.draw.rect(surface, palette["input_border"], r_mute, 1, border_radius=3)
 
     m_surf = FONT_SMALL.render("M", True, (255, 255, 255))
     surface.blit(m_surf, m_surf.get_rect(center=r_mute.center))
@@ -343,18 +383,17 @@ def draw_mute_solo(surface, x, y, muted, soloed, mx, my):
     # solo Button
     r_solo = pygame.Rect(x + btn_size + gap, y, btn_size, btn_size)
 
-    solo_base = palette["btn_load"] if soloed else (60, 60, 60)
+    solo_base = palette["btn_solo_active"] if soloed else palette["btn_inactive"]
+
     if r_solo.collidepoint(mx, my):
         col_s = lighten_color(solo_base, 1.2)
     else:
         col_s = solo_base
 
-    text_col_s = (255, 255, 255)
-
     pygame.draw.rect(surface, col_s, r_solo, border_radius=3)
-    pygame.draw.rect(surface, (150, 150, 150), r_solo, 1, border_radius=3)
+    pygame.draw.rect(surface, palette["input_border"], r_solo, 1, border_radius=3)
 
-    s_surf = FONT_SMALL.render("S", True, text_col_s)
+    s_surf = FONT_SMALL.render("S", True, (255, 255, 255))
     surface.blit(s_surf, s_surf.get_rect(center=r_solo.center))
 
     return r_mute, r_solo
@@ -567,6 +606,8 @@ class AudioEngine:
 # ALSO PYGAME HAS A UI LIBRARY I COULD HAVE DOWNLOADED FUCKKKKK
 # dude what is arcade
 # dear pygui what am i writing a letter
+# yeah like in hindsight it was dumb to not use a library for UI but its also kind of cool (and a miracle) that 50% of this apps code is just for drawing buttons and dropdowns and it WORKS
+# might as well not swap it out at this point and like im not really sure im gonna be adding that much more UI stuff anyways so its fine????
 
 
 class TextInput:
@@ -1602,19 +1643,12 @@ while running:
         stem_confirm_rect = pygame.Rect(240, 325, 170, 50)
         stem_cancel_rect = pygame.Rect(430, 325, 170, 50)
 
-        # confirm
-        if stem_confirm_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, palette["btn_confirm_hl"], stem_confirm_rect)
-        else:
-            pygame.draw.rect(screen, palette["btn_confirm"], stem_confirm_rect)
-        draw_text_centered("CONFIRM", FONT_LARGE, text_color, stem_confirm_rect)
-
-        # cancel
-        if stem_cancel_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, palette["btn_cancel_hl"], stem_cancel_rect)
-        else:
-            pygame.draw.rect(screen, palette["btn_cancel"], stem_cancel_rect)
-        draw_text_centered("CANCEL", FONT_LARGE, text_color, stem_cancel_rect)
+        draw_action_button(
+            screen, "CONFIRM", stem_confirm_rect, palette["btn_confirm"], mx, my
+        )
+        draw_action_button(
+            screen, "CANCEL", stem_cancel_rect, palette["btn_cancel"], mx, my
+        )
 
         # draw lists last
         dropdown_song_select.draw_list(screen)
@@ -1646,19 +1680,13 @@ while running:
         tune_confirm_rect = pygame.Rect(230, 340, 180, 50)
         tune_cancel_rect = pygame.Rect(430, 340, 180, 50)
 
-        # confirm
-        if tune_confirm_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, palette["btn_confirm_hl"], tune_confirm_rect)
-        else:
-            pygame.draw.rect(screen, palette["btn_confirm"], tune_confirm_rect)
-        draw_text_centered("CONFIRM", FONT_LARGE, text_color, tune_confirm_rect)
+        draw_action_button(
+            screen, "CONFIRM", tune_confirm_rect, palette["btn_confirm"], mx, my
+        )
 
-        # cancel
-        if tune_cancel_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, palette["btn_cancel_hl"], tune_cancel_rect)
-        else:
-            pygame.draw.rect(screen, palette["btn_cancel"], tune_cancel_rect)
-        draw_text_centered("CANCEL", FONT_LARGE, text_color, tune_cancel_rect)
+        draw_action_button(
+            screen, "CANCEL", tune_cancel_rect, palette["btn_cancel"], mx, my
+        )
 
         dropdown_manual_key.draw_list(screen)
         dropdown_manual_scale.draw_list(screen)
@@ -1717,12 +1745,10 @@ while running:
         )
 
         opt_close_rect = pygame.Rect(335, 480, 170, 50)
-        if opt_close_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, palette["btn_confirm_hl"], opt_close_rect)
-        else:
-            pygame.draw.rect(screen, palette["btn_confirm"], opt_close_rect)
 
-        draw_text_centered("CLOSE", FONT_LARGE, text_color, opt_close_rect)
+        draw_action_button(
+            screen, "CLOSE", opt_close_rect, palette["btn_cancel"], mx, my
+        )
 
         dropdown_theme.draw_list(screen)
         dropdown_font.draw_list(screen)
@@ -1759,19 +1785,24 @@ while running:
         save_confirm_rect = pygame.Rect(start_x, btn_y, btn_w, btn_h)
         save_cancel_rect = pygame.Rect(start_x + btn_w + gap, btn_y, btn_w, btn_h)
 
-        # save button
-        if save_confirm_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, palette["btn_confirm_hl"], save_confirm_rect)
-        else:
-            pygame.draw.rect(screen, palette["btn_confirm"], save_confirm_rect)
-        draw_text_centered("SAVE", FONT_MEDIUM, text_color, save_confirm_rect)
-
-        # cancel button
-        if save_cancel_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, palette["btn_cancel_hl"], save_cancel_rect)
-        else:
-            pygame.draw.rect(screen, palette["btn_cancel"], save_cancel_rect)
-        draw_text_centered("CANCEL", FONT_MEDIUM, text_color, save_cancel_rect)
+        draw_action_button(
+            screen,
+            "SAVE",
+            save_confirm_rect,
+            palette["btn_confirm"],
+            mx,
+            my,
+            FONT_MEDIUM,
+        )
+        draw_action_button(
+            screen,
+            "CANCEL",
+            save_cancel_rect,
+            palette["btn_cancel"],
+            mx,
+            my,
+            FONT_MEDIUM,
+        )
 
     if loading_mode:
         overlay = pygame.Surface((SCREEN_W, SCREEN_H), pygame.SRCALPHA)
@@ -1802,19 +1833,24 @@ while running:
         load_confirm_rect = pygame.Rect(start_x, btn_y, btn_w, btn_h)
         load_cancel_rect = pygame.Rect(start_x + btn_w + gap, btn_y, btn_w, btn_h)
 
-        # load buttom
-        if load_confirm_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, palette["btn_confirm_hl"], load_confirm_rect)
-        else:
-            pygame.draw.rect(screen, palette["btn_confirm"], load_confirm_rect)
-        draw_text_centered("LOAD", FONT_MEDIUM, text_color, load_confirm_rect)
-
-        # cancel button
-        if load_cancel_rect.collidepoint(mx, my):
-            pygame.draw.rect(screen, palette["btn_cancel_hl"], load_cancel_rect)
-        else:
-            pygame.draw.rect(screen, palette["btn_cancel"], load_cancel_rect)
-        draw_text_centered("CANCEL", FONT_MEDIUM, text_color, load_cancel_rect)
+        draw_action_button(
+            screen,
+            "LOAD",
+            load_confirm_rect,
+            palette["btn_confirm"],
+            mx,
+            my,
+            FONT_MEDIUM,
+        )
+        draw_action_button(
+            screen,
+            "CANCEL",
+            load_cancel_rect,
+            palette["btn_cancel"],
+            mx,
+            my,
+            FONT_MEDIUM,
+        )
 
         if dropdown_load_project:
             dropdown_load_project.draw_list(screen)
