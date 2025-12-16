@@ -964,6 +964,24 @@ def reset_master():
     master_key = None
     master_scale = None
 
+def restart_application():
+    global master_bpm, master_key, master_scale
+
+    print("Restarting...")
+    audio_engine.stop()
+
+    for i in range(12):
+        clear_slot(i)
+
+    master_bpm = None
+    master_key = None
+    master_scale = None
+
+    audio_engine.max_length = 0
+    audio_engine.position = 0
+    audio_engine.start()
+
+    print("Restart Complete.")
 
 def get_song_list():
     all_songs = []
@@ -1354,6 +1372,19 @@ while running:
     draw_text_centered(
         "Set Manual Tuning", FONT_MEDIUM, palette["text_main"], mt_btn_rect
     )
+
+    # restart button
+    btn_reset_rect = pygame.Rect(230, 20, 90, 40)
+    reset_col = palette["btn_cancel"]
+
+    if btn_reset_rect.collidepoint(mx, my) and not input_blocked:
+        reset_outline = lighten_color(reset_col, 1.2)
+    else:
+        reset_outline = darken_color(reset_col)
+
+    pygame.draw.rect(screen, reset_col, btn_reset_rect, border_radius=4)
+    pygame.draw.rect(screen, reset_outline, btn_reset_rect, 4, border_radius=4)
+    draw_text_centered("Reset", FONT_MEDIUM, palette["text_main"], btn_reset_rect)
 
     # export WAV button
     btn_exp_w = 140
@@ -2180,6 +2211,10 @@ while running:
 
         # main screen inputs
         if event.type == pygame.MOUSEBUTTONDOWN:
+
+            # restart app
+            if btn_reset_rect.collidepoint(mx, my) and event.button == 1:
+                restart_application()
 
             # expor
             if btn_exp_rect.collidepoint(mx, my) and event.button == 1:
