@@ -96,7 +96,7 @@ palette = {
     "slider_track": (60, 60, 60),
     "slider_fill": (60, 140, 220),
     "slider_knob": (240, 240, 240),
-    "accent": (60, 140, 220),  # used for random shit including the export wav button because why not
+    "accent": (60, 140, 220),  # used for random shit + export wav
     "btn_confirm": (50, 160, 80),
     "btn_cancel": (180, 60, 60),
     "btn_save": (50, 160, 80),
@@ -1516,6 +1516,8 @@ while running:
         ]
         pygame.draw.polygon(screen, icon_col, pts)
 
+    any_solo_visual = any(s.solo for s in slots if not s.empty)
+
     # draw slots
     for i in range(12):
         slot = slots[i]
@@ -1531,7 +1533,16 @@ while running:
         else:
             color = stem_colors.get(slot.type, circle_color_default)
 
+            should_pulse = False
+
             if master_bpm:
+                if any_solo_visual:
+                    if slot.solo:
+                        should_pulse = True
+                elif not slot.mute:
+                    should_pulse = True
+
+            if should_pulse:
                 base_outline = darken_color(color)
                 bright_outline = lighten_color(color, factor=1.6)
                 dynamic_pulse = pulse_val * slot.volume
@@ -2286,7 +2297,13 @@ while running:
                         slot_button_clicked = True
 
                     if ms_x + 24 <= mx <= ms_x + 44 and ms_y <= my <= ms_y + 20:
-                        slots[slot_index].solo = not slots[slot_index].solo
+                        if slots[slot_index].solo:
+                            slots[slot_index].solo = False
+                        else:
+                            for s in slots:
+                                s.solo = False
+                            slots[slot_index].solo = True
+
                         slot_button_clicked = True
 
                     if not slot_button_clicked:
